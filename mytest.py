@@ -108,23 +108,23 @@ def my_dnn_train(X, Y, iter_times, iter_coefficient):
     return param
 
 
-def my_dnn_predict(X_train, Y_train, X_test, Y_test, param):
-    varia_train = forward_propagation(param, X_train)
+def my_dnn_predict(X_train, Y_train, X_test, Y_test, param_predict):
+    varia_train = forward_propagation(param_predict, X_train)
     y_predict_train = varia_train["A" + str(layer_number)]
-    varia_test = forward_propagation(param, X_test)
+    varia_test = forward_propagation(param_predict, X_test)
     y_predict_test = varia_test["A" + str(layer_number)]
     print("训练集准确率为：{}%", format(100 - np.mean(np.abs(y_predict_train - Y_train)) * 100))
     print("测试集准确率为：{}%", format(100 - np.mean(np.abs(y_predict_test - Y_test)) * 100))
     return y_predict_train, y_predict_test
 
 
-iteration_times = 8000
-iteration_coefficient = 0.01
-
-train_character, test_character, train_output, test_output = init_data()
-param, layer_number = init_parameter(train_character, train_output)
-varia = forward_propagation(param, train_character)
-grad = back_propagation(param, varia, train_character, train_output)
-parameter = grad_down(param, iteration_coefficient, grad)
-parameter = my_dnn_train(train_character, train_output, iteration_times, iteration_coefficient)
-Y_train_predict, Y_test_predict = my_dnn_predict(train_character, train_output, test_character, test_output)
+if __name__ == '__main__':
+    iteration_times = 8000
+    iteration_coefficient = 0.01
+    train_character, test_character, train_output, test_output = init_data()
+    param, layer_number = init_parameter(train_character, train_output)
+    varia = forward_propagation(param, train_character)
+    grad = back_propagation(param, varia, train_character, train_output)
+    parameter_g = grad_down(param, iteration_coefficient, grad)
+    para_d = my_dnn_train(train_character, train_output, iteration_times, iteration_coefficient)
+    Y_train_predict, Y_test_predict = my_dnn_predict(train_character, train_output, test_character, test_output, para_d)
