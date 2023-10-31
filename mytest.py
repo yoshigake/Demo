@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plt.rcParams['font.sans-serif'] = 'SemHei'
+plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['lines.linewidth'] = 2
 
@@ -17,27 +17,22 @@ def init_data():
     test_set_character = np.array(test_set[["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]])
     train_set_output = np.array(train_set[["EH"]])
     test_set_output = np.array(test_set[["EH"]])
-
     row_train_set = train_set_character.shape[0]
     col_train_set = train_set_character.shape[1]
     row_test_set = test_set_character.shape[0]
     col_test_set = test_set_character.shape[1]
-
     train_characteristic = np.zeros((col_train_set, row_train_set))
     test_characteristic = np.zeros((col_test_set, row_test_set))
-
     for i in range(col_test_set):
         train_characteristic[i, :] = (train_set_character.T[i, :] - np.min(train_set_character.T[i, :])) / (
                 np.max(train_set_character.T[i, :]) - np.min(train_set_character.T[i, :]))
         test_characteristic[i, :] = (test_set_character.T[i, :] - np.min(test_set_character.T[i, :])) / (
                 np.max(test_set_character.T[i, :]) - np.min(test_set_character.T[i, :]))
-
-    # transposed &
     train_put_out = np.zeros((1, row_train_set))
     test_put_out = np.zeros((1, row_test_set))
-    train_put_out = (train_set_output.T[0, :] - np.min(train_set_output.T[0, :])) / (
-            np.max(train_put_out.T[0, :]) - np.min(train_set_output.T[0, :]))
-    test_put_out = (test_set_output.T[0, :] - np.min(test_put_out.T[0, :])) / (
+    train_put_out[0, :] = (train_set_output.T[0, :] - np.min(train_set_output.T[0, :])) / (
+            np.max(train_set_output.T[0, :]) - np.min(train_set_output.T[0, :]))
+    test_put_out[0, :] = (test_set_output.T[0, :] - np.min(test_set_output.T[0, :])) / (
             np.max(test_set_output.T[0, :]) - np.min(test_set_output.T[0, :]))
     return train_characteristic, test_characteristic, train_put_out, test_put_out
 
@@ -48,7 +43,7 @@ def relu(line):
 
 
 def init_parameter(X, Y):
-    dim = [20, 30, 20, 1]
+    dim = [10, 30, 1]
     layer_num = len(dim)
     param_init = {}
     param_init["w1"] = np.random.rand(dim[0], X.shape[0]) / np.sqrt(X.shape[0])
@@ -83,8 +78,8 @@ def back_propagation(param_back, varia_back, X, Y):
     return grad
 
 
-def loss_function(varia_l, X, Y):
-    loss = np.sum((varia_l["active" + str(layer_number)] - Y) ** 2) / (2 * Y.shape[1])
+def loss_function(varia_l, Y, layer_l):
+    loss = np.sum((Y - varia_l["active"+str(layer_l)]) ** 2) / (2 * Y.shape[1])
     return loss
 
 
@@ -95,26 +90,27 @@ def grad_down(param_grad, iter_coefficient, grad_g):
     return param_grad
 
 
-def my_dnn_train(X, Y, iter_times, iter_coefficient):
-    param_dnn = init_parameter(X, Y)
+def my_dnn_train(X, Y, iter_times, iter_coefficient, layer_d):
+    param_dnn, layer_numb = init_parameter(X, Y)
+    lost_f=[]
     for i in range(1, iter_times + 1):
         varia_dnn = forward_propagation(param_dnn, X)
         grad_dnn = back_propagation(param_dnn, varia_dnn, X, Y)
         param_dnn = grad_down(param_dnn, iter_coefficient, grad_dnn)
-        loss = loss_function(varia_dnn, X, Y)
+        loss = loss_function(varia_dnn, Y, layer_d)
         if i % 100 == 0 and i != 0:
             print("第{}次迭代损失函数的值为：{}".format(i, loss))
-            loss_function.append(loss)
-    return param_dnn
+            lost_f.append(loss)
+    return param_dnn,lost_f
 
 
 def my_dnn_predict(X_train, Y_train, X_test, Y_test, param_predict):
     varia_train = forward_propagation(param_predict, X_train)
-    y_predict_train = varia_train["A" + str(layer_number)]
+    y_predict_train = varia_train["active" + str(layer_number)]
     varia_test = forward_propagation(param_predict, X_test)
-    y_predict_test = varia_test["A" + str(layer_number)]
-    print("训练集准确率为：{}%", format(100 - np.mean(np.abs(y_predict_train - Y_train)) * 100))
-    print("测试集准确率为：{}%", format(100 - np.mean(np.abs(y_predict_test - Y_test)) * 100))
+    y_predict_test = varia_test["active" + str(layer_number)]
+    print("训练集准确率为:{}%".format((100 - np.mean(np.abs(y_predict_train - Y_train)) * 100)))
+    print("测试集准确率为:{}%".format((100 - np.mean(np.abs(y_predict_test - Y_test)) * 100)))
     return y_predict_train, y_predict_test
 
 
@@ -126,5 +122,10 @@ if __name__ == '__main__':
     varia = forward_propagation(param, train_character)
     grad = back_propagation(param, varia, train_character, train_output)
     parameter_g = grad_down(param, iteration_coefficient, grad)
-    para_d = my_dnn_train(train_character, train_output, iteration_times, iteration_coefficient)
+    para_d,lost = my_dnn_train(train_character, train_output, iteration_times, iteration_coefficient, layer_number)
     Y_train_predict, Y_test_predict = my_dnn_predict(train_character, train_output, test_character, test_output, para_d)
+    plt.plot(lost)
+    plt.title('损失函数随迭代次数变化图')
+    plt.xlabel('迭代次数')
+    plt.ylabel('损失函数值')
+    plt.show()
