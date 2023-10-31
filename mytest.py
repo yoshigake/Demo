@@ -96,16 +96,16 @@ def grad_down(param_grad, iter_coefficient, grad_g):
 
 
 def my_dnn_train(X, Y, iter_times, iter_coefficient):
-    param = init_parameter(X, Y)
+    param_dnn = init_parameter(X, Y)
     for i in range(1, iter_times + 1):
-        varia = forward_propagation(param, X)
-        grad = back_propagation(param, varia, X, Y)
-        param = grad_down(param, iter_coefficient, grad)
-        loss = loss_function(varia, X, Y)
+        varia_dnn = forward_propagation(param_dnn, X)
+        grad_dnn = back_propagation(param_dnn, varia_dnn, X, Y)
+        param_dnn = grad_down(param_dnn, iter_coefficient, grad_dnn)
+        loss = loss_function(varia_dnn, X, Y)
         if i % 100 == 0 and i != 0:
             print("第{}次迭代损失函数的值为：{}".format(i, loss))
             loss_function.append(loss)
-    return param
+    return param_dnn
 
 
 def my_dnn_predict(X_train, Y_train, X_test, Y_test, param_predict):
